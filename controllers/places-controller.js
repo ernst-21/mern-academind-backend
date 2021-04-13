@@ -157,7 +157,6 @@ const deletePlace = async (req, res, next) => {
   }
 
   try {
-    //testing
     await place.remove();
     place.creator.places.pull(place);
     await place.creator.save();
