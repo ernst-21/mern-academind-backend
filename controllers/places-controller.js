@@ -1,4 +1,5 @@
-const { validationResult } = require('express-validator');
+const fs = require('fs');
+const {validationResult} = require('express-validator');
 const HttpError = require('../models/http-error');
 const getCoordsForAddress = require('../util/location');
 const Place = require('../models/place');
@@ -24,7 +25,7 @@ const getPlaceById = async (req, res, next) => {
     );
     return next(error);
   }
-  res.json({ place: place.toObject({ getters: true }) });
+  res.json({place: place.toObject({getters: true})});
 };
 
 const getPlacesByUserId = async (req, res, next) => {
@@ -48,7 +49,7 @@ const getPlacesByUserId = async (req, res, next) => {
     );
   }
   res.json({
-    places: userWithPlaces.places.map((place) => place.toObject({ getters: true }))
+    places: userWithPlaces.places.map((place) => place.toObject({getters: true}))
   });
 };
 
@@ -57,7 +58,7 @@ const createPlace = async (req, res, next) => {
   if (!errors.isEmpty()) {
     return next(HttpError('Invalid inputs. Please check your data.', 422));
   }
-  const { title, description, address, creator } = req.body;
+  const {title, description, address, creator} = req.body;
 
   let coordinates;
   try {
@@ -99,7 +100,7 @@ const createPlace = async (req, res, next) => {
     );
     return next(error);
   }
-  res.status(201).json({ place: createdPlace });
+  res.status(201).json({place: createdPlace});
 };
 
 const updatePlace = async (req, res, next) => {
@@ -107,7 +108,7 @@ const updatePlace = async (req, res, next) => {
   if (!errors.isEmpty()) {
     return next(HttpError('Invalid inputs. Please check your data.', 422));
   }
-  const { title, description } = req.body;
+  const {title, description} = req.body;
   const placeId = req.params.pid;
   let place;
   try {
@@ -116,6 +117,14 @@ const updatePlace = async (req, res, next) => {
     const error = new HttpError(
       'Something went wrong. Could not find a place.',
       500
+    );
+    return next(error);
+  }
+
+  if (place.creator.toString() !== req.userData.userId) {
+    const error = new HttpError(
+      'You are not allowed to edit this place.',
+      401
     );
     return next(error);
   }
@@ -133,7 +142,7 @@ const updatePlace = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(200).json({ place: place.toObject({ getters: true }) });
+  res.status(200).json({place: place.toObject({getters: true})});
 };
 
 const deletePlace = async (req, res, next) => {
@@ -155,6 +164,16 @@ const deletePlace = async (req, res, next) => {
     return next(error);
   }
 
+  if (place.creator.id !== req.userData.userId) {
+    const error = new HttpError(
+      'You are not allowed to edit this place.',
+      401
+    );
+    return next(error);
+  }
+
+  const imagePath = place.image;
+
   try {
     await place.remove();
     place.creator.places.pull(place);
@@ -166,7 +185,12 @@ const deletePlace = async (req, res, next) => {
     );
     return next(error);
   }
-  res.status(200).json({ message: 'Place deleted.' });
+
+  fs.unlink(imagePath, err => {
+    console.log(err);
+  });
+
+  res.status(200).json({message: 'Place deleted.'});
 };
 
 exports.getPlaceById = getPlaceById;
