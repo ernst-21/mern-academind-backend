@@ -71,8 +71,7 @@ const createPlace = async (req, res, next) => {
     description,
     address,
     location: coordinates,
-    image:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Empire_State_Building_during_sunset.jpg/800px-Empire_State_Building_during_sunset.jpg',
+    image: req.file.path,
     creator
   });
 

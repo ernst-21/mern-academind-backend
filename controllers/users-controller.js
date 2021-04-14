@@ -1,4 +1,4 @@
-const { validationResult } = require('express-validator');
+const {validationResult} = require('express-validator');
 const User = require('../models/user');
 
 const HttpError = require('../models/http-error');
@@ -23,11 +23,12 @@ const signup = async (req, res, next) => {
   if (!errors.isEmpty()) {
     return next(new HttpError('Invalid inputs. Please check your data.', 422));
   }
-  const { name, email, password } = req.body;
+
+  const {name, email, password} = req.body;
 
   let existingUser;
   try {
-    existingUser = await User.findOne({ email: email });
+    existingUser = await User.findOne({email: email});
   } catch (err) {
     const error = new HttpError(
       'Signing up failed. please try again later',
@@ -46,8 +47,7 @@ const signup = async (req, res, next) => {
   const createdUser = new User({
     name,
     email,
-    image:
-      'https://images.pexels.com/photos/878846/pexels-photo-878846.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+    image: req.file.path,
     password,
     places: []
   });
@@ -59,16 +59,16 @@ const signup = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(201).json({ user: createdUser.toObject({ getters: true }) });
+  res.status(201).json({user: createdUser.toObject({getters: true})});
 };
 
 const login = async (req, res, next) => {
-  const { email, password } = req.body;
+  const {email, password} = req.body;
 
   let existingUser;
 
   try {
-    existingUser = await User.findOne({ email: email });
+    existingUser = await User.findOne({email: email});
   } catch (err) {
     const error = new HttpError(
       'Logging in failed. please try again later',
@@ -82,7 +82,7 @@ const login = async (req, res, next) => {
     return next(error);
   }
 
-  res.json({ message: 'Logged in!', user: existingUser.toObject({getters: true}) });
+  res.json({message: 'Logged in!', user: existingUser.toObject({getters: true})});
 };
 
 exports.getUsers = getUsers;
